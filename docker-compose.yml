@@ -1,4 +1,4 @@
-version: "3.11"
+version: "3.10"
 
 services:
   app:
@@ -10,7 +10,9 @@ services:
       - db
     volumes:
       - ./app:/app
-    command: sh -c "python3 manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python3 manage.py wait_for_db && 
+                    python3 manage.py migrate && 
+                    python3 manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - DB_NAME=devdb
