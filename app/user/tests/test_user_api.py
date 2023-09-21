@@ -8,16 +8,16 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-CREATE_USER_URL = reverse('user:create')
-TOKEN_URL = reverse('user:token')
-ME_URL = reverse('user:me')
+CREATE_USER_URL = reverse('users:create')
+TOKEN_URL = reverse('users:token')
+ME_URL = reverse('users:me')
 
 
 def create_user(**params):
     return get_user_model().objects.create_user(**params)
 
 
-class PublicUserApiTests(TestCase):
+class PublicUserAPITests(TestCase):
     """Tests without authentication"""
     def setUp(self):
         self.client = APIClient()
@@ -53,7 +53,7 @@ class PublicUserApiTests(TestCase):
         ).exists()
         self.assertFalse(user_exists)
 
-    def test_login_success(self):
+    def test_create_token_success(self):
         """Test generates token for valid credentials"""
         create_user(**self.user_payload)
         login_payload = {
@@ -65,7 +65,7 @@ class PublicUserApiTests(TestCase):
         self.assertIn("token", res.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    def test_login_bad_credentials(self):
+    def test_create_token_bad_credentials(self):
         """Test returns error if credentials invalid"""
         create_user(**self.user_payload)
         login_payload = {
@@ -77,7 +77,7 @@ class PublicUserApiTests(TestCase):
         self.assertNotIn("token", res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_login_blank_password(self):
+    def test_create_token_blank_password(self):
         """Test returns error if password blank"""
         create_user(**self.user_payload)
         login_payload = {
@@ -95,7 +95,7 @@ class PublicUserApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateUserApiTests(TestCase):
+class PrivateUserAPITests(TestCase):
     """Tests with authentication"""
     def setUp(self):
         self.client = APIClient()
