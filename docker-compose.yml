@@ -1,4 +1,4 @@
-version: "3.10"
+version: "3.9"
 
 services:
   app:
@@ -19,6 +19,7 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
+      - DEBUG=1
 
   db:
     image: postgres:14-alpine
