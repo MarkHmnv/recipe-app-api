@@ -31,28 +31,6 @@ def image_upload_url(recipe_id):
     return reverse("recipes:recipe-upload-image", args=[recipe_id])
 
 
-def create_recipe(user, **params):
-    """Create and return a sample recipe"""
-    defaults = {
-        "title": "Sample recipe title",
-        "time_minutes": 22,
-        "price": Decimal("5.25"),
-        "description": "Sample description",
-        "link": "http://example.com/recipe.pdf",
-    }
-    defaults.update(params)
-
-    return Recipe.objects.create(user=user, **defaults)
-
-
-def create_tag(user, name="Tag"):
-    return Tag.objects.create(user=user, name=name)
-
-
-def create_ingredient(user, name="Ingredient"):
-    return Ingredient.objects.create(user=user, name=name)
-
-
 class PublicRecipeAPITests(TestCase):
     """Test unauthenticated recipe API access"""
 
@@ -76,8 +54,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_retrieve_recipes(self):
         """Test retrieving a list of recipes"""
-        create_recipe(user=self.user)
-        create_recipe(user=self.user)
+        utils.create_recipe(user=self.user)
+        utils.create_recipe(user=self.user)
 
         res = self.client.get(RECIPES_URL)
 
@@ -90,8 +68,8 @@ class PrivateRecipeAPITests(TestCase):
     def test_retrieve_recipes_limited_to_user(self):
         """Test list of recipes is limited to authenticated user"""
         other_user = utils.create_user(email="other@example.com", password="password")
-        create_recipe(user=other_user)
-        create_recipe(user=self.user)
+        utils.create_recipe(user=other_user)
+        utils.create_recipe(user=self.user)
 
         res = self.client.get(RECIPES_URL)
 
@@ -103,7 +81,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_retrieve_recipe_detail(self):
         """Test retrieve recipe detail"""
-        recipe = create_recipe(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
 
         url = detail_url(recipe.id)
         res = self.client.get(url)
@@ -129,7 +107,7 @@ class PrivateRecipeAPITests(TestCase):
     def test_partial_update(self):
         """Test partial update of a recipe"""
         original_link = "https://example.com/recipe.pdf"
-        recipe = create_recipe(
+        recipe = utils.create_recipe(
             user=self.user,
             title="Sample recipe",
             link=original_link,
@@ -147,7 +125,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_full_update(self):
         """Test full update of a recipe"""
-        recipe = create_recipe(
+        recipe = utils.create_recipe(
             user=self.user,
             title="Sample recipe",
             link="https://example.com/recipe.pdf",
@@ -174,7 +152,7 @@ class PrivateRecipeAPITests(TestCase):
     def test_update_user_returns_error(self):
         """Test changing the recipe user results in an error"""
         new_user = utils.create_user(email="new@example.com", password="password")
-        recipe = create_recipe(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
 
         payload = {"user": new_user}
         url = detail_url(recipe.id)
@@ -185,7 +163,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_delete_recipe(self):
         """Test deleting a recipe successful"""
-        recipe = create_recipe(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
 
         url = detail_url(recipe.id)
         res = self.client.delete(url)
@@ -196,7 +174,7 @@ class PrivateRecipeAPITests(TestCase):
     def test_delete_other_users_recipe_error(self):
         """Test trying to delete another user recipe gives error"""
         new_user = utils.create_user(email="new@example.com", password="password")
-        recipe = create_recipe(user=new_user)
+        recipe = utils.create_recipe(user=new_user)
 
         payload = {"title": "New recipe title"}
         url = detail_url(recipe.id)
@@ -232,7 +210,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_create_recipe_with_existing_tags(self):
         """Test create a recipe with existing tag"""
-        tag = create_tag(user=self.user, name="Indian")
+        tag = utils.create_tag(user=self.user, name="Indian")
         payload = {
             "title": "Recipe title",
             "time_minutes": 10,
@@ -260,7 +238,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_create_tag_on_update(self):
         """Test create tag when updating a recipe"""
-        recipe = create_recipe(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
         payload = {
             "tags": [{"name": "Lunch"}]
         }
@@ -273,11 +251,11 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_update_recipe_assign_tag(self):
         """Test assigning an existing tag when updating a recipe"""
-        tag_breakfast = create_tag(user=self.user, name="Breakfast")
-        recipe = create_recipe(user=self.user)
+        tag_breakfast = utils.create_tag(user=self.user, name="Breakfast")
+        recipe = utils.create_recipe(user=self.user)
         recipe.tags.add(tag_breakfast)
 
-        tag_lunch = create_tag(user=self.user, name="Lunch")
+        tag_lunch = utils.create_tag(user=self.user, name="Lunch")
         payload = {
             "tags": [{"name": "Lunch"}]
         }
@@ -290,8 +268,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_clear_recipe_tags(self):
         """Test clearing a recipe tags"""
-        tag = create_tag(user=self.user)
-        recipe = create_recipe(user=self.user)
+        tag = utils.create_tag(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
         recipe.tags.add(tag)
 
         payload = {
@@ -330,7 +308,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_create_recipe_with_existing_ingredients(self):
         """Test create a recipe with existing ingredient"""
-        ingredient = create_ingredient(user=self.user, name="Ingredient 1")
+        ingredient = utils.create_ingredient(user=self.user, name="Ingredient 1")
         payload = {
             "title": "Recipe title",
             "time_minutes": 10,
@@ -358,7 +336,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_create_ingredient_on_update(self):
         """Test create ingredient when updating a recipe"""
-        recipe = create_recipe(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
         payload = {
             "ingredients": [{"name": "Ingredient 1"}]
         }
@@ -371,11 +349,11 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_update_recipe_assign_ingredient(self):
         """Test assigning an existing ingredient when updating a recipe"""
-        ingredient1 = create_ingredient(user=self.user, name="Ingredient 1")
-        recipe = create_recipe(user=self.user)
+        ingredient1 = utils.create_ingredient(user=self.user, name="Ingredient 1")
+        recipe = utils.create_recipe(user=self.user)
         recipe.ingredients.add(ingredient1)
 
-        ingredient2 = create_ingredient(user=self.user, name="Ingredient 2")
+        ingredient2 = utils.create_ingredient(user=self.user, name="Ingredient 2")
         payload = {
             "ingredients": [{"name": "Ingredient 1"}]
         }
@@ -388,8 +366,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_clear_recipe_ingredients(self):
         """Test clearing a recipe ingredients"""
-        ingredient = create_ingredient(user=self.user)
-        recipe = create_recipe(user=self.user)
+        ingredient = utils.create_ingredient(user=self.user)
+        recipe = utils.create_recipe(user=self.user)
         recipe.ingredients.add(ingredient)
 
         payload = {
@@ -401,6 +379,48 @@ class PrivateRecipeAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.ingredients.count(), 0)
 
+    def test_filter_by_tags(self):
+        """Test filtering recipes by tags"""
+        recipe1 = utils.create_recipe(user=self.user, title="Recipe 1")
+        recipe2 = utils.create_recipe(user=self.user, title="Recipe 2")
+        tag1 = utils.create_tag(user=self.user, name="Tag 1")
+        tag2 = utils.create_tag(user=self.user, name="Tag 2")
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+        recipe3 = utils.create_recipe(user=self.user, title="Recipe 3")
+
+        params = {"tags": f"{tag1.id},{tag2.id}"}
+        res = self.client.get(RECIPES_URL, params)
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
+    def test_filter_by_ingredients(self):
+        """Test filtering recipes by ingredients"""
+        r1 = utils.create_recipe(user=self.user, title="Recipe 1")
+        r2 = utils.create_recipe(user=self.user, title="Recipe 2")
+        in1 = utils.create_ingredient(user=self.user, name="Ingredient 1")
+        in2 = utils.create_ingredient(user=self.user, name="Ingredient 2")
+        r1.ingredients.add(in1)
+        r2.ingredients.add(in2)
+        r3 = utils.create_recipe(user=self.user, title="Recipe 3")
+
+        params = {"ingredients": f"{in1.id},{in2.id}"}
+        res = self.client.get(RECIPES_URL, params)
+
+        s1 = RecipeSerializer(r1)
+        s2 = RecipeSerializer(r2)
+        s3 = RecipeSerializer(r3)
+
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
 
 class ImageUploadTests(TestCase):
     """Tests for the image upload API"""
@@ -408,7 +428,7 @@ class ImageUploadTests(TestCase):
         self.client = APIClient()
         self.user = utils.create_user()
         self.client.force_authenticate(self.user)
-        self.recipe = create_recipe(user=self.user)
+        self.recipe = utils.create_recipe(user=self.user)
 
     def tearDown(self):
         self.recipe.image.delete()
